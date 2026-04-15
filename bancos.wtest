@@ -1,0 +1,35 @@
+import bancos.*
+
+/* 
+>Configurar la casa para que use la cuenta combinada.
+>Configurar la cuenta combinada con:
+  -La primaria es la cuenta con gastos con 20 pesos de costo de operación y 0 de saldo.
+  -La secundaria es la cuenta corriente con 300 pesos de saldo.
+>Se depositan 100 pesos en la combinada (van a la primaria, quedando 80 efectivos).
+>Verificar que el saldo de la combinada es 380 y el saldo de la cuenta con gastos es 80.
+>Si se gasta 280 pesos, como salen 80 de la cuenta con gastos y 200 de la cuenta corriente, entonces hay que verificar que el total gastado es 280, 
+el saldo de la combinada es 100, la cuenta con gastos queda en 0 y la cuenta corriente en 100.
+>Se intenta depositar 10 pesos en la combinada. No se puede. El saldo sigue siendo 100.
+>Se intenta hacer un gasto de 1000 pesos. No se puede. El saldo sigue siendo 100 y los gastos 280.    
+ */
+
+describe "tests" {
+  test "Casa con cuenta combinada." {
+    casa.cuentaAsignada(cuentaCombinada)
+
+    cuentaCombinada.cuentaPrimaria(cuentaConGastos)
+    cuentaConGastos.costoPorOperacion(20)
+    cuentaCombinada.cuentaSecundaria(cuentaCorriente)
+
+    cuentaConGastos.depositar(80)
+    cuentaCombinada.depositar(300)
+    assert.equals(380, cuentaCombinada.saldo())
+    assert.equals(80, cuentaConGastos.saldo())
+
+    cuentaCombinada.extraer(280)
+    assert.equals(100, cuentaCombinada.saldo())  // hacer esto es lo mismo que hacer: assert.equals(100, cuentaCorriente.saldo())
+    assert.equals(0, cuentaConGastos.saldo())
+
+    cuentaCombinada.depositar(10)
+  }
+}
