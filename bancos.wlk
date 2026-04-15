@@ -2,6 +2,9 @@
 object casa {
   var montoGastadoPorMes = 0
   var cuentaAsignada = cuentaCorriente
+  //var casaEnOrden = true
+  var cantReparaciones = 0
+  var viveres = 0
 
 
   method registrarPago(monto) {
@@ -27,6 +30,31 @@ object casa {
   method cuentaAsignada() {
     return cuentaAsignada
   }
+//     ej. 3       // al gastar se refleja en la cuenta asignada de la casa y al reparar se aumenta el gasto total de la casa
+method comprarViveres(porcentajeAComprar, calidad) {
+  if (){
+    viveres = porcentajeAComprar * calidad
+  } else {
+    viveres = 0
+  }
+  
+}
+
+method realizarReparaciones(montoDeRep) {
+  cantReparaciones = 0
+}
+
+method viveresSuficientes() {
+  return (viveres * 40) / 100       // porcentaje: (cantidad a calcular * valor del porcentaje) / 100
+}
+
+method hayReparacionesPendientes() {
+  return cantReparaciones > 0
+}
+
+method casaEnOrden() {
+  return self.hayReparacionesPendientes() && (self.viveresSuficientes() > 0)
+}
 }
 
 object cuentaCorriente {
@@ -37,8 +65,8 @@ object cuentaCorriente {
     return saldo
   }
   
-  method extraer(montoAExtraer) {
-    saldo = saldo - montoAExtraer
+  method extraer(monto) {
+    saldo = saldo - monto
   }
   
   method depositar(saldoAIngresar) {
@@ -48,19 +76,23 @@ object cuentaCorriente {
 
 object cuentaConGastos {
   var saldo = 0
+  var costoPorOperacion = 0
 
 
   method saldo() {
     return saldo
   }
 
-  method depositar(monto, costoPorOperacion) {
-    
-    self.elMontoEsSuficiente(monto, costoPorOperacion)  
+  method depositar(monto) {
+    self.elMontoEsSuficiente(monto)  
     saldo = saldo + (monto - costoPorOperacion)
   }
 
-  method elMontoEsSuficiente(monto, costoPorOperacion) {
+  method costoPorOperacion(valor) {
+    costoPorOperacion = valor
+  }
+
+  method elMontoEsSuficiente(monto) {
     if (monto <= costoPorOperacion){         //el igual ya que no podes depositar 0 pesos, es ilógico
       self.error("Monto no permitido, el monto debe ser mayor que:" + costoPorOperacion)
     }
@@ -73,52 +105,58 @@ object cuentaConGastos {
 
 
 //   EJERCICIO 2 - CUENTAS  COMBINADAS
-object cuentaPrimaria {
-  var saldo = 0
+object cuentaCombinada {
+  var cuentaPrimaria = cuentaCorriente
+  var cuentaSecundaria = cuentaConGastos
 
-  method saldo() {
-    return saldo
+
+
+  method extraer(monto) {
+     self.validarExtraccion(monto)    //validador para comprobar si la extracción se puede hacer o no
+     self.extraerElMonto(monto)
   }
 
   method depositar(monto) {
-    saldo = saldo + monto
-  }
-
-  method extraer(monto) {
-    saldo = saldo - monto
-  }
-}
-
-object cuentaSecundaria {
-  var saldo = 0
-
-  method saldo() {
-    return saldo
-  }
-
-  method extraer(monto) {
-    saldo = saldo - monto
-  }
-}
-
-object cuentaCombinada {
-  //var saldo = 0          innecesaria(?)
-
-  method extraer(monto) {
-     self.sePuedeExtraer(monto)    //validador para comprobar si la extracción se puede hacer o no
-  }
-
-  method depositar(monto, cuentaADepositar) {
-    cuentaADepositar.depositar(monto)
+    cuentaPrimaria.depositar(monto)
   }
 
   method saldo() {
-    return cuentaPrimaria.saldo() + cuentaSecundaria.saldo()
+    return 0.max(cuentaPrimaria.saldo()) + 0.max(cuentaSecundaria.saldo())         // mal, considera saldos negativos
+    //return (cuentaPrimaria.saldo().max(cuentaSecundaria.saldo()))   // retornearía el saldo positivo de ambas cuentas, si no retorna 0
   }
 
-  method sePuedeExtraer(monto) {
-    return if (monto > cuentaPrimaria.saldo().max(cuentaSecundaria.saldo())){
+  method validarExtraccion(monto) {
+    return if (not self.puedeExtraer(monto)){
       self.error("No es posible realizar una extracción de:" + monto)
     }
   }
+
+  method puedeExtraer(valor) {
+    //return valor <= self.saldo()   // resolver esta parte
+    return valor <= (cuentaPrimaria.saldo() + cuentaSecundaria.saldo())
+  }
+
+  method extraerElMonto(monto) {
+    if (monto <= cuentaPrimaria.saldo()){    // se sacaría todo lo posible de la 1° cuenta, si no de la 2°
+      cuentaPrimaria.extraer(monto)
+    } else {      
+      cuentaSecundaria.extraer(monto - cuentaPrimaria.saldo())
+      cuentaPrimaria.extraer(monto) 
+      //cuentaPrimaria.extraer(cuentaPrimaria.saldo())
+    }
+  }
+
+  method cuentaPrimaria(cuenta) {
+    cuentaPrimaria = cuenta
+  }
+
+  method cuentaSecundaria(cuenta) {
+    cuentaSecundaria = cuenta
+  }
 }
+
+// EJERCICIO 3   -   REPARACIONES Y CONSUMO
+
+
+// EJERCICIO 4   -   ESTRATEGIAS DE MANTENIMIENTO
+
