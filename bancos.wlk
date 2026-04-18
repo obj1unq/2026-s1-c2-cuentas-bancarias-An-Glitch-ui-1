@@ -2,9 +2,9 @@
 object casa {
   var montoGastadoPorMes = 0
   var cuentaAsignada = cuentaCorriente
-  //var casaEnOrden = true
-  var cantReparaciones = 0
-  var viveres = 0
+  var cantReparaciones = 0                // nuevo atributo del ej3
+  var viveres = 0                         // nuevo atributo del ej3
+  var estrategia = estrategiaMinimoEIndispensable      // nuevo atributo del ej4
 
 
   method registrarPago(monto) {
@@ -30,30 +30,53 @@ object casa {
   method cuentaAsignada() {
     return cuentaAsignada
   }
-//     ej. 3       // al gastar se refleja en la cuenta asignada de la casa y al reparar se aumenta el gasto total de la casa
-method comprarViveres(porcentajeAComprar, calidad) {
-  if (){
-    viveres = porcentajeAComprar * calidad
-  } else {
-    viveres = 0
+//     ej. 3    -    al gastar se refleja en la cuenta asignada de la casa y al reparar se aumenta el gasto total de la casa
+ method comprarViveres(porcentajeAComprar, calidad) {
+   if (viveres + porcentajeAComprar > 100) {     // No se debería poder comprar un porcentaje que haga superar el 100% de víveres en la casa.
+     self.error("No se puede superar el 100% de víveres")
   }
-  
-}
 
-method realizarReparaciones(montoDeRep) {
-  cantReparaciones = 0
-}
+   self.registrarPago(porcentajeAComprar * calidad)
+   viveres = viveres + porcentajeAComprar
+ } 
 
-method viveresSuficientes() {
-  return (viveres * 40) / 100       // porcentaje: (cantidad a calcular * valor del porcentaje) / 100
-}
+ method realizarReparaciones() {
+   self.registrarPago(cantReparaciones)
+   cantReparaciones = 0
+ }
 
-method hayReparacionesPendientes() {
-  return cantReparaciones > 0
-}
+ method viveresSuficientes() {
+   return viveres >= 40       // la casa tiene víveres suficiente si tiene al menos el 40% de víveres
+ }
 
-method casaEnOrden() {
-  return self.hayReparacionesPendientes() && (self.viveresSuficientes() > 0)
+ method hayReparacionesPendientes() {
+   return cantReparaciones > 0
+ }
+
+ method casaEnOrden() {
+   return self.hayReparacionesPendientes() && self.viveresSuficientes()
+ }
+
+ method registrarRotura(monto) {
+   cantReparaciones = cantReparaciones + monto
+ }
+
+ // cosas de la parte 4
+ method estrategia(tipo) {
+   estrategia = tipo
+ }
+
+ method agregarViveres(cantidad) {
+   viveres = viveres + cantidad
+ }
+
+ method viveres() {
+   return viveres
+ }
+
+ method cambiarDeMes() {
+   montoGastadoPorMes = 0
+   estrategia.aplicar(self)
 }
 }
 
@@ -70,7 +93,7 @@ object cuentaCorriente {
   }
   
   method depositar(saldoAIngresar) {
-    saldo = saldoAIngresar
+    saldo = saldo + saldoAIngresar
   }
 }
 
@@ -102,7 +125,6 @@ object cuentaConGastos {
     saldo = saldo - monto
   }
 } 
-
 
 //   EJERCICIO 2 - CUENTAS  COMBINADAS
 object cuentaCombinada {
@@ -139,10 +161,9 @@ object cuentaCombinada {
   method extraerElMonto(monto) {
     if (monto <= cuentaPrimaria.saldo()){    // se sacaría todo lo posible de la 1° cuenta, si no de la 2°
       cuentaPrimaria.extraer(monto)
-    } else {      
+    } else {
       cuentaSecundaria.extraer(monto - cuentaPrimaria.saldo())
-      cuentaPrimaria.extraer(monto) 
-      //cuentaPrimaria.extraer(cuentaPrimaria.saldo())
+      cuentaPrimaria.extraer(cuentaPrimaria.saldo())
     }
   }
 
@@ -155,8 +176,55 @@ object cuentaCombinada {
   }
 }
 
-// EJERCICIO 3   -   REPARACIONES Y CONSUMO
-
+/* EJERCICIO 3   -   REPARACIONES Y CONSUMO
+Se agregaron las siguientes funciones en el objeto casa:
+- comprarViveres(porcentajeAComprar, calidad)
+- realizarReparaciones(montoDeRep)
+- viveresSuficientes()
+- hayReparacionesPendientes()
+- casaEnOrden()
+- registrarRotura(monto)
+*/
 
 // EJERCICIO 4   -   ESTRATEGIAS DE MANTENIMIENTO
+object estrategiaMinimoEIndispensable {
+  var calidad = 0
 
+  
+  method aplicar(casa) {
+    if (not casa.viveresSuficientes()){
+      casa.comprarViveres(40 - casa.viveres(), calidad)
+    }
+  }
+
+   method calidad() {
+    return calidad
+ }
+
+  method calidad(valor) {
+   calidad = valor
+ }
+}
+
+object estrategiaFull {
+  const calidad = 5
+
+
+  method aplicar(casa) {              // si está en orden la casa
+    if (casa.casaEnOrden()) {
+
+      if (100 - casa.viveres() > 0) {          // si la casa NO tiene el 100% de viveres
+        casa.comprarViveres(100 - casa.viveres(), calidad)
+      }
+
+    } else {                         // si NO está en orden
+      if (not casa.viveresSuficientes()) {     // si la casa NO tiene suficientes viveres
+        casa.comprarViveres(40 - casa.viveres(), calidad)
+      }
+
+      if (casa.hayReparacionesPendientes()) {     // si hay reparaciones que hacer las repara
+        casa.realizarReparaciones()
+      }
+    }
+  }
+}
