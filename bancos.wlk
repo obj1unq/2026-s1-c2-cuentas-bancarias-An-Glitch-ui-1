@@ -1,4 +1,4 @@
-//   EJERCICIO 1 - LA CASA DE PEPE Y JULIÁN
+//   EJERCICIO 1 - LA CASA DE PEPE Y JULIÁN n
 object casa {
   var montoGastadoPorMes = 0
   var cuentaAsignada = cuentaCorriente
